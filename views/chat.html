@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+    <input type="text" id="data" />
+    <button id="btn">click</button>
+
+    <script>
+      const socket = io();
+      let loggeduser = null;
+      let touser = null;
+
+      let _ = id => document.querySelector(id);
+
+      socket.on("connect", () => {
+        console.log("user connected");
+        let userinfo = {
+          data: document.cookie
+        };
+        socket.emit("sendfirsttime", JSON.stringify(userinfo));
+        socket.on("recfirsttime", msg => {
+          let ud = JSON.parse(msg).email;
+          loggeduser = ud;
+          console.log(msg);
+        });
+        start();
+      });
+
+      function start() {
+        let btn = _("#btn");
+
+        socket.on("recvdata", msg => {
+          console.log("mesg rec :", msg);
+        });
+        socket.on("failure", msg => {
+          console.log("failure :", msg);
+        });
+        socket.on("useradded", msg => {
+          console.log("user added :", msg);
+        });
+        btn.addEventListener("click", () => {
+          let d = _("#data").value;
+          let header = {
+            from: loggeduser,
+            to: touser,
+            data: d,
+            auth: document.cookie
+          };
+          socket.emit("fromclient", JSON.stringify(header));
+        });
+      }
+    </script>
+  </body>
+</html>
